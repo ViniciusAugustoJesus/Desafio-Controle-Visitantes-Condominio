@@ -1,6 +1,12 @@
+
 from pydantic import BaseModel, Field
 from datetime import datetime
-from typing import Optional, List
+from typing import Optional, List, ForwardRef
+
+Visitante = ForwardRef("Visitante")
+Condominio = ForwardRef("Condominio")
+Unidade = ForwardRef("Unidade")
+Movimentacao = ForwardRef("Movimentacao")
 
 class VisitanteBase(BaseModel):
     nome: str = Field(..., example="João Silva")
@@ -13,11 +19,15 @@ class VisitanteCreate(VisitanteBase):
 class VisitanteUpdate(VisitanteBase):
     pass
 
-class Visitante(VisitanteBase):
+class VisitanteOnly(VisitanteBase):
     id: int
-
     class Config:
-        from_attributes = True 
+        from_attributes = True
+
+class Visitante(VisitanteOnly):
+    pass
+
+
 
 class CondominioBase(BaseModel):
     nome: str = Field(..., example="Condomínio Residencial Sol")
@@ -26,12 +36,16 @@ class CondominioBase(BaseModel):
 class CondominioCreate(CondominioBase):
     pass
 
-class Condominio(CondominioBase):
+class CondominioOnly(CondominioBase):
     id: int
-    unidades: List["Unidade"] = [] #
-
     class Config:
         from_attributes = True
+
+class Condominio(CondominioOnly):
+    unidades: List[ForwardRef("UnidadeOnly")] = []
+    class Config:
+        from_attributes = True
+
 
 class UnidadeBase(BaseModel):
     numero: str = Field(..., example="101")
@@ -41,13 +55,17 @@ class UnidadeBase(BaseModel):
 class UnidadeCreate(UnidadeBase):
     pass
 
-class Unidade(UnidadeBase):
+class UnidadeOnly(UnidadeBase):
     id: int
-    condominio: Optional[CondominioBase] = None 
-    movimentacoes: List["Movimentacao"] = [] 
-
     class Config:
         from_attributes = True
+
+class Unidade(UnidadeOnly):
+    condominio: Optional[CondominioOnly] = None
+    movimentacoes: List[ForwardRef("MovimentacaoOnly")] = []
+    class Config:
+        from_attributes = True
+
 
 class MovimentacaoBase(BaseModel):
     visitante_id: int = Field(..., example=1)
@@ -62,17 +80,21 @@ class MovimentacaoUpdate(BaseModel):
     observacoes: Optional[str] = Field(None, example="Visitante saiu com sucesso.")
     ativa: Optional[bool] = Field(None, example=False)
 
-class Movimentacao(MovimentacaoBase):
+class MovimentacaoOnly(MovimentacaoBase):
     id: int
     data_hora_entrada: datetime
     data_hora_saida: Optional[datetime] = None
     ativa: bool
-    visitante: Optional[Visitante] = None 
-    unidade: Optional[Unidade] = None 
-
     class Config:
         from_attributes = True
 
-Unidade.model_rebuild()
+class Movimentacao(MovimentacaoOnly):
+    visitante: Optional[VisitanteOnly] = None
+    unidade: Optional[UnidadeOnly] = None
+    class Config:
+        from_attributes = True
+
+Visitante.model_rebuild()
 Condominio.model_rebuild()
+Unidade.model_rebuild()
 Movimentacao.model_rebuild()
