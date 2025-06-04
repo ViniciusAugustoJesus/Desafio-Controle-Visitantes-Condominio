@@ -10,7 +10,6 @@ router = APIRouter(
     responses={404: {"description": "Condomínio não encontrado"}},
 )
 
-
 @router.post(
     "/", response_model=schemas.Condominio, status_code=status.HTTP_201_CREATED
 )
@@ -33,6 +32,16 @@ def read_condominio(condominio_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Condomínio não encontrado")
     return db_condominio
 
+@router.get("/relacao/unidades", response_model=List[schemas.Condominio])
+def get_condominios_com_unidades(db: Session = Depends(get_db)):
+    """
+    Mostra a relação entre condomínios e suas unidades.
+    Retorna uma lista de condomínios, onde cada condomínio inclui suas unidades associadas.
+    """
+    condominios_com_unidades = db.query(models.Condominio).all()
+    for condominio in condominios_com_unidades:
+        condominio.unidades # Isso força o carregamento das unidades
+    return condominios_com_unidades
 
 @router.get("/{condominio_id}/unidades", response_model=List[schemas.Unidade])
 def read_unidades_por_condominio(
@@ -66,13 +75,3 @@ def create_unidade_para_condominio(
     if db_condominio is None:
         raise HTTPException(status_code=404, detail="Condomínio não encontrado")
     return crud.create_unidade(db=db, unidade=unidade)
-
-
-@router.get("/relacao/unidades", response_model=List[schemas.Condominio])
-def get_condominios_com_unidades(db: Session = Depends(get_db)):
-
-    condominios_com_unidades = db.query(models.Condominio).all()
-
-    for condominio in condominios_com_unidades:
-        condominio.unidades
-    return condominios_com_unidades
