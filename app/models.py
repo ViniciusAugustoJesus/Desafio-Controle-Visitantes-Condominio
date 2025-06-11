@@ -39,7 +39,7 @@ class Movimentacao(Base):
     data_hora_entrada = Column(DateTime, default=datetime.now)
     data_hora_saida = Column(DateTime, nullable=True)
     observacoes = Column(String, nullable=True)
-    ativa = Column(Boolean, default=True) # Indica se a movimentação está em aberto (entrada sem saída)
+    ativa = Column(Boolean, default=True)
 
     visitante = relationship("Visitante", back_populates="movimentacoes")
     unidade = relationship("Unidade", back_populates="movimentacoes")

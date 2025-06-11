@@ -4,7 +4,6 @@ from .database import engine, Base, get_db
 from . import models, crud
 from .routers import visitantes, condominios, controle_acesso
 
-# Cria as tabelas no banco de dados
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
@@ -15,7 +14,6 @@ app = FastAPI(
     redoc_url="/redoc"
 )
 
-# Inclui os routers
 app.include_router(visitantes.router)
 app.include_router(condominios.router)
 app.include_router(controle_acesso.router)
